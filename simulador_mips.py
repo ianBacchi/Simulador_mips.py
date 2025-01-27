@@ -1,27 +1,31 @@
-import sys
+import tkinter as tk
+from tkinter import filedialog
 
-def main():
-    # Verificar se foi passado o arquivo como argumento
-    if len(sys.argv) != 2:
-        print("Uso correto: python simulador_mips.py <caminho_do_arquivo>")
-        sys.exit(1)
+def upload_profile_picture():
+    # Abre o seletor de arquivos com filtros corrigidos
+    file_path = filedialog.askopenfilename(
+        title="Select File", 
+        filetypes=[("S files", "*.s"), ("Txt files", "*.txt")]
+    )
+    if file_path:
+        print("Selected File:", file_path)
+        
+        try:
+            with open(file_path, "+r") as file:
+                
+                print("Conteudo do arquivo: ")
+                for line in file:
+                    clean_line = line.strip()
+                    print(clean_line)
+        except Exception as e:
+            print("Erro ao abrir arquivo", e)
 
-    arquivo_mips = sys.argv[1]
+# Interface gráfica
+root = tk.Tk()
+root.title("Assembly File Reader")
 
-    # Chama a função para processar o arquivo
-    processar_arquivo(arquivo_mips)
+open_button = tk.Button(root, text="Open File", command=upload_profile_picture)
+open_button.pack(pady=10)
 
-def processar_arquivo(arquivo):
-    try:
-        with open(arquivo, 'r') as f:
-            # Lê cada linha do arquivo
-            for linha in f:
-                # Aqui você vai processar as instruções
-                print(f"Lendo instrução: {linha.strip()}")
-                # Adicione o código para interpretar e simular a instrução MIPS
-    except FileNotFoundError:
-        print(f"Erro: O arquivo '{arquivo}' não foi encontrado.")
-        sys.exit(1)
+root.mainloop()
 
-if __name__ == "__main__":
-    main()
