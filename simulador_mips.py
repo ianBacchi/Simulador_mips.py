@@ -2,207 +2,186 @@ import tkinter as tk
 from tkinter import filedialog
 import re
 
-# Lista de opcodes conhecidos (pode ser expandida)
+# Listas de opcodes conhecidos
+OPCODES_ARITMETICOS = {"add", "addi", "sub", "mul", "and", "or", "sll"}
+OPCODES_MEMORIA = {"lw", "sw", "lui"}
+OPCODES_CONDICIONAIS = {"slt", "slti"}
 
-OPCODES_ARITIMETICOS = {"add","ADD", "addi","ADDI","SUB", "sub","MUL", "mul","AND", "and","OR", "or","SLL", "sll"}
+OPCODES = set.union(OPCODES_ARITMETICOS, OPCODES_CONDICIONAIS, OPCODES_MEMORIA)
 
-OPCODES_MEMORIA = {"LW","lw","sw","lui", "SW", "LUI"}
-
-OPCODE_CONDICIONAIS = {"SLT","slt","slti", "SLTI"}
-
-
-# Lista de registradores MIPS (pode ser expandida)
-REGISTER_INFO = {
-    "$zero": (0, "constante 0"),
-    "$at": (1, "reservado para o montador"),
-    "$v0": (2, "avaliação de expressão e resultados de uma função"),
-    "$v1": (3, "avaliação de expressão e resultados de uma função"),
-    "$a0": (4, "argumento 1"),
-    "$a1": (5, "argumento 2"),
-    "$a2": (6, "argumento 3"),
-    "$a3": (7, "argumento 4"),
-    "$t0": (8, "temporário (não preservado pela chamada)"),
-    "$t1": (9, "temporário (não preservado pela chamada)"),
-    "$t2": (10, "temporário (não preservado pela chamada)"),
-    "$t3": (11, "temporário (não preservado pela chamada)"),
-    "$t4": (12, "temporário (não preservado pela chamada)"),
-    "$t5": (13, "temporário (não preservado pela chamada)"),
-    "$t6": (14, "temporário (não preservado pela chamada)"),
-    "$t7": (15, "temporário (não preservado pela chamada)"),
-    "$s0": (16, "temporário salvo"),
-    "$s1": (17, "temporário salvo"),
-    "$s2": (18, "temporário salvo"),
-    "$s3": (19, "temporário salvo"),
-    "$s4": (20, "temporário salvo"),
-    "$s5": (21, "temporário salvo"),
-    "$s6": (22, "temporário salvo"),
-    "$s7": (23, "temporário salvo"),
-    "$t8": (24, "temporário (não preservado pela chamada)"),
-    "$t9": (25, "temporário (não preservado pela chamada)"),
-    "$k0": (26, "reservado para o kernel do sistema operacional"),
-    "$k1": (27, "reservado para o kernel do sistema operacional"),
-    "$gp": (28, "ponteiro para área global"),
-    "$sp": (29, "stack pointer"),
-    "$fp": (30, "frame pointer"),
-    "$ra": (31, "endereço de retorno (usado por chamada de função)")
+# Lista de registradores MIPS
+REGISTRADORES = {
+    "$zero": 0, "$at": 1, "$v0": 2, "$v1": 3, "$a0": 4, "$a1": 5,
+    "$a2": 6, "$a3": 7, "$t0": 8, "$t1": 9, "$t2": 10, "$t3": 11,
+    "$t4": 12, "$t5": 13, "$t6": 14, "$t7": 15, "$s0": 16, "$s1": 17,
+    "$s2": 18, "$s3": 19, "$s4": 20, "$s5": 21, "$s6": 22, "$s7": 23,
+    "$t8": 24, "$t9": 25, "$k0": 26, "$k1": 27, "$gp": 28, "$sp": 29,
+    "$fp": 30, "$ra": 31
 }
 
-
-def select_file():
-    """Abre o seletor de arquivos e retorna o caminho do arquivo selecionado."""
-    file_path = filedialog.askopenfilename(
-        title="Select File", 
-        filetypes=[("S files", "*.s"), ("Txt files", "*.txt")]
+def selecionar_arquivo():
+    """Abre um seletor de arquivos e retorna o caminho do arquivo escolhido."""
+    caminho_arquivo = filedialog.askopenfilename(
+        title="Selecionar Arquivo", filetypes=[("Arquivos Assembly", "*.s"), ("Arquivos de Texto", "*.txt")]
     )
-    return file_path
+    return caminho_arquivo
 
-def process_file(file_path):
-    """Lê o arquivo e separa os segmentos .data e .text"""
+def ler_arquivo(caminho_arquivo):
+    """Lê o arquivo Assembly e separa os segmentos .data e .text."""
     try:
-        with open(file_path, 'r') as file:
-            data_segment = []  # Armazena linhas do segmento .data
-            text_segment = []  # Armazena linhas do segmento .text
-            current_segment = None  # Controla o segmento atual
+        with open(caminho_arquivo, 'r') as arquivo:
+            segmento_dados, segmento_texto = [], []
+            segmento_atual = None
 
-            for line in file:
-                clean_line = line.strip()  # Remove espaços extras e quebras de linha
-                if not clean_line:  # Ignora linhas vazias
+            for linha in arquivo:
+                linha_limpa = linha.strip()
+                if not linha_limpa or linha_limpa.startswith("#"):
                     continue
                 
-                # Remove comentários no final da linha
-                if "#" in clean_line:
-                    clean_line = clean_line.split("#")[0].strip()
+                if "#" in linha_limpa:
+                    linha_limpa = linha_limpa.split("#")[0].strip()
                 
-                # Ignora linhas que ficaram vazias após remover o comentário
-                if not clean_line:
+                if linha_limpa == ".data":
+                    segmento_atual = "dados"
+                    continue
+                elif linha_limpa == ".text":
+                    segmento_atual = "texto"
                     continue
                 
-                # Verifica qual segmento está sendo lido
-                if clean_line == ".data":
-                    current_segment = "data"
-                    continue
-                elif clean_line == ".text":
-                    current_segment = "text"
-                    continue
-                
-                # Adiciona a linha ao segmento correspondente
-                if current_segment == "data":
-                    data_segment.append(clean_line)
-                elif current_segment == "text":
-                    text_segment.append(clean_line)
+                if segmento_atual == "dados":
+                    segmento_dados.append(linha_limpa)
+                elif segmento_atual == "texto":
+                    segmento_texto.append(linha_limpa)
 
-            return data_segment, text_segment
-
+            return segmento_dados, segmento_texto
     except Exception as e:
-        print("Erro ao processar o arquivo:", e)
+        print("Erro ao ler o arquivo:", e)
         return [], []
+def simulate_mips(instructions):
+    registers = {reg: 0 for reg in REGISTRADORES.keys()}  # Inicializa registradores com 0
+    memory = {}  # Simula a memória para armazenar símbolos
+    output = []  # Simula a saída do programa
 
-def process_data_segment(data_segment):
+    for line in instructions:
+        if not line:  # Pula linhas vazias
+            continue
+
+        instr = line[0][0]  # Nome da instrução (ex: 'li', 'add', 'syscall')
+        args = [arg[0].strip(',') for arg in line[1:]]  # Remove vírgulas dos argumentos
+
+        if instr == "li":  # Carrega um valor imediato no registrador
+            registers[args[0]] = int(args[1])
+
+        elif instr == "la":  # Carrega um endereço de símbolo (simulado)
+            print('ACONTECEU')
+            registers[args[0]] = memory.get(args[1], 0)
+
+        elif instr == "move":  # Move valor de um registrador para outro
+            registers[args[0]] = registers[args[1]]
+
+        elif instr == "add":  # Soma dois registradores e armazena o resultado
+            registers[args[0]] = registers[args[1]] + registers[args[2]]
+
+        elif instr == "syscall":  # Simula chamadas do sistema
+            if registers["$v0"] == 1:  # Imprimir inteiro
+                output.append(str(registers["$a0"]))
+            elif registers["$v0"] == 4:  # Imprimir string (simulada)
+                output.append(f"[STRING AT] {registers['$a0']}")
+            elif registers["$v0"] == 5:  # Ler inteiro (simulado)
+                registers["$v0"] = 10  # Exemplo fixo
+
+        elif instr.endswith(":"):  # Se for uma label, apenas registra
+            memory[instr[:-1]] = len(output)
+
+    return output  # Retorna a saída do programa
+
+def processar_segmento_dados(segmento_dados):
     """Processa o segmento .data e armazena as variáveis e valores."""
-    data_dict = {}
+    dados = {}
     
-    for line in data_segment:
-        parts = line.split(":")
-        if len(parts) < 2:
-            continue  # Ignora linhas inválidas
-
-        var_name = parts[0].strip()  # Nome da variável
-        content = parts[1].strip()  # Tipo e valor
-
-        # Processa .asciiz
-        if ".asciiz" in content:
-            string_value = content.split(".asciiz")[1].strip().strip('"')
-            data_dict[var_name] = string_value
-
-        # Processa .word
-        elif ".word" in content:
-            values = content.split(".word")[1].strip().split(",")
-            values = [int(v.strip()) for v in values]  # Converte para números
-            data_dict[var_name] = values
+    for linha in segmento_dados:
+        partes = linha.split(":")
+        if len(partes) < 2:
+            continue
+        
+        nome_variavel = partes[0].strip()
+        conteudo = partes[1].strip()
+        
+        if ".asciiz" in conteudo:
+            valor = conteudo.split(".asciiz")[1].strip().strip('"')
+            dados[nome_variavel] = valor
+        elif ".word" in conteudo:
+            valores = [int(v.strip()) for v in conteudo.split(".word")[1].strip().split(",")]
+            dados[nome_variavel] = valores
     
-    return data_dict
+    return dados
 
-def tokenize_line(line):
-    """Recebe uma linha de código assembly e retorna uma lista de tokens categorizados."""
-    tokens = line.split()  # Divide a linha em palavras
-    categorized_tokens = []
-
+def tokenizar_linha(linha):
+    """Tokeniza uma linha de código Assembly."""
+    tokens = linha.split()
+    tokens_categorizados = []
+    
     for token in tokens:
-        # Verifica se é um rótulo (label)
         if token.endswith(":"):
-            categorized_tokens.append((token[:-1], "LABEL"))  # Remove o ':' do final
-        
-        # Verifica se é um opcode
+            tokens_categorizados.append((token[:-1], "ROTULO"))
         elif token in OPCODES:
-            categorized_tokens.append((token, "OPCODE"))
-        
-        # Verifica se é um registrador (mesmo que venha como símbolo)
-        elif token in REGISTERS or (token.startswith("$") and token in REGISTERS):
-            categorized_tokens.append((token, "REGISTER"))
-        
-        # Verifica se é um número imediato (constante)
-        elif re.match(r"^-?\d+$", token):  
-            categorized_tokens.append((token, "IMMEDIATE"))
-        
-        # Se não for nenhuma das opções acima, assume que é um símbolo (nome de variável, rótulo, etc.)
+            tokens_categorizados.append((token, "OPCODE"))
+        elif token in REGISTRADORES or token.startswith("$"):
+            tokens_categorizados.append((token, "REGISTRADOR"))
+        elif re.match(r"^-?\d+$", token):
+            tokens_categorizados.append((token, "IMEDIATO"))
         else:
-            categorized_tokens.append((token, "SYMBOL"))
+            tokens_categorizados.append((token, "SIMBOLO"))
     
-    return categorized_tokens
+    return tokens_categorizados
 
-
-def process_text_segment(text_segment):
-    """Processa o segmento .text e analisa os tokens de cada linha."""
-    processed_text = []
+def processar_segmento_texto(segmento_texto):
+    """Processa o segmento .text e analisa os tokens."""
+    texto_processado = []
     
-    for line in text_segment:
-        tokens = tokenize_line(line)
-        processed_text.append(tokens)
+    for linha in segmento_texto:
+        tokens = tokenizar_linha(linha)
+        print(tokens)
+        print(simulate_mips(tokens))
+        input(' ')
+        texto_processado.append(tokens)
     
-    return processed_text
+    return texto_processado
 
-def display_results(data_segment, text_segment, data_dict, processed_text):
+def exibir_resultados(segmento_dados, segmento_texto, dados, texto_processado):
     """Exibe os resultados no console."""
     print("Segmento .data:")
-    for line in data_segment:
-        print(line)
+    for linha in segmento_dados:
+        print(linha)
 
     print("\nSegmento .text:")
-    for line in text_segment:
-        print(line)
-
-    print("\nDados processados do .data:")
-    for var, value in data_dict.items():
-        print(f"{var}: {value}")
-
+    for linha in segmento_texto:
+        print(linha)
+    
+    print("\nDados processados do segmento .data:")
+    for chave, valor in dados.items():
+        print(f"{chave}: {valor}")
+    
     print("\nTokens do segmento .text:")
-    for tokens in processed_text:
+    for tokens in texto_processado:
         print(tokens)
 
-def upload_profile_picture():
-    """Função principal que integra todas as funções."""
-    file_path = select_file()
+def iniciar_processamento():
+    """Função principal que integra todas as etapas."""
+    caminho_arquivo = selecionar_arquivo()
     
-    if file_path:
-        print("Selected File:", file_path)
-        
-        # Processa o arquivo
-        data_segment, text_segment = process_file(file_path)
-        
-        # Processa o segmento .data
-        data_dict = process_data_segment(data_segment)
-        
-        # Processa o segmento .text
-        processed_text = process_text_segment(text_segment)
-        
-        # Exibe os resultados
-        display_results(data_segment, text_segment, data_dict, processed_text)
+    if caminho_arquivo:
+        print("Arquivo selecionado:", caminho_arquivo)
+        segmento_dados, segmento_texto = ler_arquivo(caminho_arquivo)
+        dados = processar_segmento_dados(segmento_dados)
+        texto_processado = processar_segmento_texto(segmento_texto)
+        exibir_resultados(segmento_dados, segmento_texto, dados, texto_processado)
 
 # Interface gráfica
-root = tk.Tk()
-root.title("Assembly File Reader")
+janela = tk.Tk()
+janela.title("Leitor de Arquivo Assembly")
 
-open_button = tk.Button(root, text="Open File", command=upload_profile_picture)
-open_button.pack(pady=10)
+botao_abrir = tk.Button(janela, text="Abrir Arquivo", command=iniciar_processamento)
+botao_abrir.pack(pady=10)
 
-root.mainloop()
+janela.mainloop()
