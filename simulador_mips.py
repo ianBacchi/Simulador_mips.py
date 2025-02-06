@@ -57,6 +57,7 @@ def ler_arquivo(caminho_arquivo):
     except Exception as e:
         print("Erro ao ler o arquivo:", e)
         return [], []
+    
 def simulate_mips(instructions):
     registers = {reg: 0 for reg in REGISTRADORES.keys()}  # Inicializa registradores com 0
     memory = {}  # Simula a memória para armazenar símbolos
@@ -66,7 +67,8 @@ def simulate_mips(instructions):
         if not line:  # Pula linhas vazias
             continue
 
-        instr = line[0][0]  # Nome da instrução (ex: 'li', 'add', 'syscall')
+        instr = line[0]  # Nome da instrução (ex: 'li', 'add', 'syscall')
+        print(instr)
         args = [arg[0].strip(',') for arg in line[1:]]  # Remove vírgulas dos argumentos
 
         if instr == "li":  # Carrega um valor imediato no registrador
