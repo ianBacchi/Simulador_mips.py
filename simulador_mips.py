@@ -58,43 +58,45 @@ def ler_arquivo(caminho_arquivo):
         print("Erro ao ler o arquivo:", e)
         return [], []
     
-def simulate_mips(instructions):
-    registers = {reg: 0 for reg in REGISTRADORES.keys()}  # Inicializa registradores com 0
-    memory = {}  # Simula a memória para armazenar símbolos
+def simulate_mips(instrucao, registradores, dados):
+    print(registradores)
+    memory = dados # Simula a memória para armazenar símbolos
     output = []  # Simula a saída do programa
+    print(memory)
+    
+    if not instrucao:  # Pula linhas vazias
+        return
+    
+    instr = instrucao[0][0]  # Nome da instrução (ex: 'li', 'add', 'syscall')
+    print(instr)
+    #instrucao = [arg[0].strip(',') for arg in instrucao[1:]]  # Remove vírgulas dos argumentos
+    print(instrucao)
+    if instr == "li":  # Carrega um valor imediato no registrador
+        registradores[instrucao[0]] = int(instrucao[1])
 
-    for line in instructions:
-        if not line:  # Pula linhas vazias
-            continue
+    elif instr == "la":  # Carrega um endereço de símbolo (simulado)
+        print('ACONTECEU')
+        registradorUsado = instrucao[1][0].replace(",", "")  
+        print(registradorUsado)
+        registradores[registradorUsado] = 10
 
-        instr = line[0]  # Nome da instrução (ex: 'li', 'add', 'syscall')
-        print(instr)
-        args = [arg[0].strip(',') for arg in line[1:]]  # Remove vírgulas dos argumentos
+    elif instr == "move":  # Move valor de um registrador para outro
+        registradores[instrucao[0]] = registradores[instrucao[1]]
 
-        if instr == "li":  # Carrega um valor imediato no registrador
-            registers[args[0]] = int(args[1])
+    elif instr == "add":  # Soma dois registradores e armazena o resultado
+        registradores[instrucao[0]] = registradores[instrucao[1]] + registradores[instrucao[2]]
 
-        elif instr == "la":  # Carrega um endereço de símbolo (simulado)
-            print('ACONTECEU')
-            registers[args[0]] = memory.get(args[1], 0)
+    elif instr == "syscall":  # Simula chamadas do sistema
+        if registradores["$v0"] == 1:  # Imprimir inteiro
+            output.append(str(registradores["$a0"]))
+        elif registradores["$v0"] == 4:  # Imprimir string (simulada)
+            output.append(f"[STRING AT] {registradores['$a0']}")
+        elif registradores["$v0"] == 5:  # Ler inteiro (simulado)
+            registradores["$v0"] = 10  # Exemplo fixo
 
-        elif instr == "move":  # Move valor de um registrador para outro
-            registers[args[0]] = registers[args[1]]
-
-        elif instr == "add":  # Soma dois registradores e armazena o resultado
-            registers[args[0]] = registers[args[1]] + registers[args[2]]
-
-        elif instr == "syscall":  # Simula chamadas do sistema
-            if registers["$v0"] == 1:  # Imprimir inteiro
-                output.append(str(registers["$a0"]))
-            elif registers["$v0"] == 4:  # Imprimir string (simulada)
-                output.append(f"[STRING AT] {registers['$a0']}")
-            elif registers["$v0"] == 5:  # Ler inteiro (simulado)
-                registers["$v0"] = 10  # Exemplo fixo
-
-        elif instr.endswith(":"):  # Se for uma label, apenas registra
-            memory[instr[:-1]] = len(output)
-
+    #elif instr.endswith(":"):  # Se for uma label, apenas registra
+     #   memory[instr[:-1]] = len(output)
+    #print(registradores)
     return output  # Retorna a saída do programa
 
 def processar_segmento_dados(segmento_dados):
@@ -137,14 +139,15 @@ def tokenizar_linha(linha):
     
     return tokens_categorizados
 
-def processar_segmento_texto(segmento_texto):
+def processar_segmento_texto(segmento_texto, dados):
     """Processa o segmento .text e analisa os tokens."""
     texto_processado = []
     
     for linha in segmento_texto:
+        registradores = {reg: 0 for reg in REGISTRADORES.keys()}  # Inicializa registradores com 0
         tokens = tokenizar_linha(linha)
         print(tokens)
-        print(simulate_mips(tokens))
+        print(simulate_mips(tokens, registradores, dados))
         input(' ')
         texto_processado.append(tokens)
     
@@ -176,7 +179,9 @@ def iniciar_processamento():
         print("Arquivo selecionado:", caminho_arquivo)
         segmento_dados, segmento_texto = ler_arquivo(caminho_arquivo)
         dados = processar_segmento_dados(segmento_dados)
-        texto_processado = processar_segmento_texto(segmento_texto)
+        print(dados)
+        input()
+        texto_processado = processar_segmento_texto(segmento_texto, dados)
         exibir_resultados(segmento_dados, segmento_texto, dados, texto_processado)
 
 # Interface gráfica
