@@ -66,22 +66,21 @@ def simulate_mips(instrucao, registradores, dados):
     
     if not instrucao:  # Pula linhas vazias
         return
-    
-    instr = instrucao[0][0]  # Nome da instrução (ex: 'li', 'add', 'syscall')
+    instrucao = instrucao.split(' ')
+    instr = instrucao[0]  # Nome da instrução (ex: 'li', 'add', 'syscall')
     print(instr)
     #instrucao = [arg[0].strip(',') for arg in instrucao[1:]]  # Remove vírgulas dos argumentos
     print(instrucao)
     if instr == "li":  # Carrega um valor imediato no registrador
-        registradores[instrucao[0]] = int(instrucao[1])
+        registradores[instrucao[1]] = int(instrucao[1])
 
     elif instr == "la":  # Carrega um endereço de símbolo (simulado)
-        print('ACONTECEU')
-        registradorUsado = instrucao[1][0].replace(",", "")  
+        registradorUsado = instrucao[1].replace(",", "")  
         print(registradorUsado)
         registradores[registradorUsado] = 10
 
     elif instr == "move":  # Move valor de um registrador para outro
-        registradores[instrucao[0]] = registradores[instrucao[1]]
+        registradores[instrucao[1]] = registradores[instrucao[2]]
 
     elif instr == "add":  # Soma dois registradores e armazena o resultado
         registradores[instrucao[0]] = registradores[instrucao[1]] + registradores[instrucao[2]]
@@ -120,36 +119,17 @@ def processar_segmento_dados(segmento_dados):
     
     return dados
 
-def tokenizar_linha(linha):
-    """Tokeniza uma linha de código Assembly."""
-    tokens = linha.split()
-    tokens_categorizados = []
-    
-    for token in tokens:
-        if token.endswith(":"):
-            tokens_categorizados.append((token[:-1], "ROTULO"))
-        elif token in OPCODES:
-            tokens_categorizados.append((token, "OPCODE"))
-        elif token in REGISTRADORES or token.startswith("$"):
-            tokens_categorizados.append((token, "REGISTRADOR"))
-        elif re.match(r"^-?\d+$", token):
-            tokens_categorizados.append((token, "IMEDIATO"))
-        else:
-            tokens_categorizados.append((token, "SIMBOLO"))
-    
-    return tokens_categorizados
 
 def processar_segmento_texto(segmento_texto, dados):
     """Processa o segmento .text e analisa os tokens."""
     texto_processado = []
+    registradores = {reg: 0 for reg in REGISTRADORES.keys()}  # Inicializa registradores com 0
     
     for linha in segmento_texto:
-        registradores = {reg: 0 for reg in REGISTRADORES.keys()}  # Inicializa registradores com 0
-        tokens = tokenizar_linha(linha)
-        print(tokens)
-        print(simulate_mips(tokens, registradores, dados))
+        print("LINHA "+ linha)
+        print(simulate_mips(linha, registradores, dados))
         input(' ')
-        texto_processado.append(tokens)
+        texto_processado.append(linha)
     
     return texto_processado
 
