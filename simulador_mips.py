@@ -60,30 +60,30 @@ def ler_arquivo(caminho_arquivo):
     
 def simulate_mips(instrucao, registradores, dados):
     print(registradores)
-    memory = dados # Simula a memória para armazenar símbolos
+    memory = dados  # Simula a memória para armazenar símbolos
     output = []  # Simula a saída do programa
     print(memory)
-    
+
     if not instrucao:  # Pula linhas vazias
         return
-    instrucao = instrucao.split(' ')
+    instrucao = [arg.strip(',') for arg in instrucao.split()]  # Remove vírgulas dos argumentos
     instr = instrucao[0]  # Nome da instrução (ex: 'li', 'add', 'syscall')
+
     print(instr)
-    #instrucao = [arg[0].strip(',') for arg in instrucao[1:]]  # Remove vírgulas dos argumentos
     print(instrucao)
+
     if instr == "li":  # Carrega um valor imediato no registrador
-        registradores[instrucao[1]] = int(instrucao[1])
+        registradores[instrucao[1]] = int(instrucao[2])  # Agora pega corretamente o valor imediato
 
     elif instr == "la":  # Carrega um endereço de símbolo (simulado)
-        registradorUsado = instrucao[1].replace(",", "")  
-        print(registradorUsado)
+        registradorUsado = instrucao[1]  
         registradores[registradorUsado] = 10
 
     elif instr == "move":  # Move valor de um registrador para outro
         registradores[instrucao[1]] = registradores[instrucao[2]]
 
     elif instr == "add":  # Soma dois registradores e armazena o resultado
-        registradores[instrucao[0]] = registradores[instrucao[1]] + registradores[instrucao[2]]
+        registradores[instrucao[1]] = registradores[instrucao[2]] + registradores[instrucao[3]]
 
     elif instr == "syscall":  # Simula chamadas do sistema
         if registradores["$v0"] == 1:  # Imprimir inteiro
@@ -93,10 +93,8 @@ def simulate_mips(instrucao, registradores, dados):
         elif registradores["$v0"] == 5:  # Ler inteiro (simulado)
             registradores["$v0"] = 10  # Exemplo fixo
 
-    #elif instr.endswith(":"):  # Se for uma label, apenas registra
-     #   memory[instr[:-1]] = len(output)
-    #print(registradores)
     return output  # Retorna a saída do programa
+
 
 def processar_segmento_dados(segmento_dados):
     """Processa o segmento .data e armazena as variáveis e valores."""
