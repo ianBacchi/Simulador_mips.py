@@ -58,6 +58,10 @@ def ler_arquivo(caminho_arquivo):
         print("Erro ao ler o arquivo:", e)
         return [], []
     
+
+def sair():
+    print("programa encerrado")
+
 def simulate_mips(instrucao, registradores, dados):
     print(registradores)
     memory = dados # Simula a memória para armazenar símbolos
@@ -72,26 +76,37 @@ def simulate_mips(instrucao, registradores, dados):
     #instrucao = [arg[0].strip(',') for arg in instrucao[1:]]  # Remove vírgulas dos argumentos
     print(instrucao)
     if instr == "li":  # Carrega um valor imediato no registrador
-        registradores[instrucao[1]] = int(instrucao[1])
+        registradorUsado = instrucao[1].replace(",", "")
+        registradores[registradorUsado] = int(instrucao[2])
 
     elif instr == "la":  # Carrega um endereço de símbolo (simulado)
         registradorUsado = instrucao[1].replace(",", "")  
-        print(registradorUsado)
-        registradores[registradorUsado] = 10
+        registradores[registradorUsado] = instrucao[2]
 
     elif instr == "move":  # Move valor de um registrador para outro
-        registradores[instrucao[1]] = registradores[instrucao[2]]
+        registrador1 = instrucao[1].replace(",", "")
+        registrador2 = instrucao[2]
+        registradores[registrador1] = registradores[registrador2]
 
     elif instr == "add":  # Soma dois registradores e armazena o resultado
-        registradores[instrucao[0]] = registradores[instrucao[1]] + registradores[instrucao[2]]
+        registradorDestino = instrucao[1].replace(",", "")
+        registradorSoma1 = instrucao[2].replace(",", "")
+        registradorSoma2 = instrucao[3]
+        registradores[registradorDestino] = registradores[registradorSoma1] + registradores[registradorSoma2]
 
     elif instr == "syscall":  # Simula chamadas do sistema
         if registradores["$v0"] == 1:  # Imprimir inteiro
-            output.append(str(registradores["$a0"]))
-        elif registradores["$v0"] == 4:  # Imprimir string (simulada)
+            numero = registradores["$a0"]
+            print(numero)
+        elif registradores["$v0"] == 4:  # Imprimir string 
+            palavra = registradores["$a0"]
+            print(palavra)
             output.append(f"[STRING AT] {registradores['$a0']}")
-        elif registradores["$v0"] == 5:  # Ler inteiro (simulado)
-            registradores["$v0"] = 10  # Exemplo fixo
+        elif registradores["$v0"] == 5: # Le inteiro
+            registradores["$v0"] = input("") 
+
+        elif registradores["$v0"] == 10:
+            sair()  # Exemplo fixo
 
     #elif instr.endswith(":"):  # Se for uma label, apenas registra
      #   memory[instr[:-1]] = len(output)
