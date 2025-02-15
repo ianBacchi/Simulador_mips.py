@@ -64,17 +64,17 @@ def sair():
 
 def simulate_mips(instrucao, registradores, dados):
     print(registradores)
-    memory = dados # Simula a memória para armazenar símbolos
+    memoria = dados # Simula a memória para armazenar símbolos
     output = []  # Simula a saída do programa
-    print(memory)
+    #print(memoria)
     
     if not instrucao:  # Pula linhas vazias
         return
     instrucao = instrucao.split(' ')
     instr = instrucao[0]  # Nome da instrução (ex: 'li', 'add', 'syscall')
-    print(instr)
+    #print(instr)
     #instrucao = [arg[0].strip(',') for arg in instrucao[1:]]  # Remove vírgulas dos argumentos
-    print(instrucao)
+    #print(instrucao)
     if instr == "li":  # Carrega um valor imediato no registrador
         registradorUsado = instrucao[1].replace(",", "")
         registradores[registradorUsado] = int(instrucao[2])
@@ -92,7 +92,12 @@ def simulate_mips(instrucao, registradores, dados):
         registradorDestino = instrucao[1].replace(",", "")
         registradorSoma1 = instrucao[2].replace(",", "")
         registradorSoma2 = instrucao[3]
-        registradores[registradorDestino] = registradores[registradorSoma1] + registradores[registradorSoma2]
+        registradores[registradorDestino] = int(registradores[registradorSoma1]) + int(registradores[registradorSoma2])
+    elif instr == "addi": 
+        registradorDestino = instrucao[1].replace(",", "")
+        registradorSoma1 = instrucao[2].replace(",", "")
+        valorSoma2 = instrucao[3]
+        registradores[registradorDestino] = int(registradores[registradorSoma1] + valorSoma2)
 
     elif instr == "syscall":  # Simula chamadas do sistema
         if registradores["$v0"] == 1:  # Imprimir inteiro
@@ -100,8 +105,7 @@ def simulate_mips(instrucao, registradores, dados):
             print(numero)
         elif registradores["$v0"] == 4:  # Imprimir string 
             palavra = registradores["$a0"]
-            print(palavra)
-            output.append(f"[STRING AT] {registradores['$a0']}")
+            print(memoria[palavra])
         elif registradores["$v0"] == 5: # Le inteiro
             registradores["$v0"] = input("") 
 
