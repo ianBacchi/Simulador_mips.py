@@ -114,8 +114,26 @@ def simulate_mips(instrucao, registradores, dados):
     elif instr == "sll":  # Shift Left Logical
         registradorDestino = instrucao[1].replace(",", "")
         registradorOrigem = instrucao[2].replace(",", "")
-        shiftAmount = int(instrucao[3])  # Número de bits a deslocar
+        shiftAmount = int(instrucao[3])
         registradores[registradorDestino] = registradores[registradorOrigem] << shiftAmount
+    elif instr == "slt": 
+        registradorDestino = instrucao[1].replace(",", "")
+        registrador1 = instrucao[2].replace(",", "")
+        registrador2 = instrucao[3]
+        if int(registradores[registrador1]) < int(registradores[registrador2]):
+            registradores[registradorDestino] = 1
+        else: 
+            registradores[registradorDestino] = 0
+    elif instr == "slti": 
+        registradorDestino = instrucao[1].replace(",", "")
+        registrador1 = instrucao[2].replace(",", "")
+        valorImediato = int(instrucao[3])
+       
+        if int(registradores[registrador1]) < valorImediato:
+            registradores[registradorDestino] = 1
+        else: 
+            registradores[registradorDestino] = 0
+
     elif instr == "syscall":  # Simula chamadas do sistema
         if registradores["$v0"] == 1:  # Imprimir inteiro
             numero = registradores["$a0"]
