@@ -10,7 +10,7 @@ Simulador de processador MIPS de 32 bits que permite a execução de programas e
    Após executar o simulador, você será solicitado a abrir um arquivo com código Assembly tendo algumas opções na pasta "testes" ou qualquer outro no padrão dos arquivos da pasta.
 
 3. **Execução do Código:**
-   O programa será executado **passo a passo**, mostrando as linhas do código lidas e o output gerado a cada instrução.
+   O programa será executado **passo a passo**, mostrando os registradores e seus valores, as linhas do código lidas e o output gerado a cada instrução.
 
 4. **Funções Suportadas:**
    O simulador suporta as seguintes funções em Assembly:
