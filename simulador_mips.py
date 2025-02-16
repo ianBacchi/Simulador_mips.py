@@ -63,6 +63,7 @@ def ler_arquivo(caminho_arquivo):
 
 def sair():
     print("programa encerrado")
+    exit(0)
 
 def simulate_mips(instrucao, registradores, dados):
     print(registradores)
