@@ -21,6 +21,7 @@
 	move $t1, $a0
 	
 	add $t0, $t1, $t2  
+    addi $t0, $t0, 1
 	
 	la $a0, str3 
 	li $v0, 4

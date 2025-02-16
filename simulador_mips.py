@@ -65,10 +65,11 @@ def sair():
     print("programa encerrado")
     exit(0)
 
-def simulate_mips(instrucao, registradores, dados):
-    print(registradores)
-    memoria = dados # Simula a memória para armazenar símbolos
+def simulate_mips(instrucao, registradores, dados, simulaMemoria):
+    #print(registradores)
+    data = dados # Simula a memória para armazenar símbolos
     output = []  # Simula a saída do programa
+    memoria = simulaMemoria
     #print(memoria)
     
     if not instrucao:  # Pula linhas vazias
@@ -97,10 +98,13 @@ def simulate_mips(instrucao, registradores, dados):
         registradorSoma2 = instrucao[3]
         registradores[registradorDestino] = int(registradores[registradorSoma1]) + int(registradores[registradorSoma2])
     elif instr == "addi": 
+        print(instrucao)
         registradorDestino = instrucao[1].replace(",", "")
         registradorSoma1 = instrucao[2].replace(",", "")
+        print(registradorDestino)
+        valorRegistrador = int(registradores[registradorSoma1])
         valorSoma2 = int(instrucao[3])
-        registradores[registradorDestino] = int(registradores[registradorSoma1] + valorSoma2)
+        registradores[registradorDestino] = valorRegistrador + valorSoma2
     elif instr == "sub":
         registradorDestino = instrucao[1].replace(",", "")
         registradorSub1 = instrucao[2].replace(",", "")
@@ -133,6 +137,61 @@ def simulate_mips(instrucao, registradores, dados):
             registradores[registradorDestino] = 1
         else: 
             registradores[registradorDestino] = 0
+    elif instr == "and":  # Operação lógica AND
+        registradorDestino = instrucao[1].replace(",", "")
+        registrador1 = instrucao[2].replace(",", "")
+        registrador2 = instrucao[3]
+        registradores[registradorDestino] = registradores[registrador1] & registradores[registrador2]
+
+    elif instr == "or":  # Operação lógica OR
+        registradorDestino = instrucao[1].replace(",", "")
+        registrador1 = instrucao[2].replace(",", "")
+        registrador2 = instrucao[3]
+        registradores[registradorDestino] = registradores[registrador1] | registradores[registrador2]
+
+    elif instr == "lw":  # Load Word (carrega um valor da memória para um registrador)
+        registradorDestino = instrucao[1].replace(",", "")
+
+        if "(" in instrucao[2]:
+            offset_base = instrucao[2].split("(")   
+            input(offset_base)
+            offset = int(offset_base[0]) if offset_base[0] else 0
+            registradorBase = offset_base[1].replace(")", "")
+            endereco = registradores[registradorBase] + offset  # Calcula o endereço real
+            registradores[registradorDestino] = memoria.get(endereco, 0)  # Carrega da memória
+        else:
+            valor = dados[instrucao[2]]
+            print(f"DEBUG: Tipo de valor -> {type(valor)}, Conteúdo -> {valor}")
+            if type(valor) == int:  # Se for número inteiro
+                registradores[registradorDestino] = valor
+            else:    
+                registradores[registradorDestino] = valor[0] 
+
+    elif instr == "sw":  # Store Word (armazena um valor de um registrador na memória)
+        registradorFonte = instrucao[1].replace(",", "")
+        if "(" in instrucao[2]:
+            offset_base = instrucao[2].split("(")
+            input(offset_base)
+            offset = int(offset_base[0]) if offset_base[0] else 0
+            registradorBase = offset_base[1].replace(")", "")
+
+            endereco = registradores[registradorBase] + offset  # Calcula o endereço real
+            memoria[endereco] = registradores[registradorFonte]  # Armazena na memória
+        else: 
+            valor = registradores[registradorFonte]
+            print(valor)
+            dados[instrucao[2]] = valor
+    elif instr == "lui":  # Load Upper Immediate
+        registradorDestino = instrucao[1].replace(",", "").strip()
+        
+        # Converte para inteiro corretamente, seja decimal ou hexadecimal
+        valor_str = instrucao[2].strip()
+        if valor_str.startswith("0x"):  
+            valorImediato = int(valor_str, 16) << 16  # Interpreta como hexadecimal e desloca
+        else:
+            valorImediato = int(valor_str) << 16  # Interpreta como decimal e desloca
+
+        registradores[registradorDestino] = valorImediato
 
     elif instr == "syscall":  # Simula chamadas do sistema
         if registradores["$v0"] == 1:  # Imprimir inteiro
@@ -140,7 +199,7 @@ def simulate_mips(instrucao, registradores, dados):
             output = numero
         elif registradores["$v0"] == 4:  # Imprimir string 
             palavra = registradores["$a0"]
-            output = memoria[palavra]
+            output = data[palavra]
         #elif registradores["$v0"] == 5: # Le inteiro
             #input()
         elif registradores["$v0"] == 10:
@@ -173,33 +232,15 @@ def processar_segmento_dados(segmento_dados):
     return dados
 
 
-def processar_segmento_texto(segmento_texto, dados, registradores, index=0):
+def processar_segmento_texto(segmento_texto, dados, registradores, simulaMemoria, index=0):
     """Processa uma linha por vez sem travar a interface."""
     if index < len(segmento_texto):  # Verifica se ainda há linhas para processar
         linha = segmento_texto[index]
-        output = simulate_mips(linha, registradores, dados)
+        output = simulate_mips(linha, registradores, dados, simulaMemoria)
         atualizar_interface(linha, registradores, output)
 
         # Chama a próxima linha depois de 2 segundos
-        janela.after(2000, lambda: processar_segmento_texto(segmento_texto, dados, registradores, index + 1))
-
-def exibir_resultados(segmento_dados, segmento_texto, dados, texto_processado):
-    """Exibe os resultados no console."""
-    print("Segmento .data:")
-    for linha in segmento_dados:
-        print(linha)
-
-    print("\nSegmento .text:")
-    for linha in segmento_texto:
-        print(linha)
-    
-    print("\nDados processados do segmento .data:")
-    for chave, valor in dados.items():
-        print(f"{chave}: {valor}")
-    
-    print("\nTokens do segmento .text:")
-    for tokens in texto_processado:
-        print(tokens)
+        janela.after(2000, lambda: processar_segmento_texto(segmento_texto, dados, registradores, simulaMemoria, index + 1))
 
 def iniciar_processamento():
     """Função principal que integra todas as etapas."""
@@ -211,8 +252,10 @@ def iniciar_processamento():
         dados = processar_segmento_dados(segmento_dados)
         #print(dados)
         registradores = {reg: 0 for reg in REGISTRADORES.keys()}
-        texto_processado = processar_segmento_texto(segmento_texto, dados, registradores)
-        exibir_resultados(segmento_dados, segmento_texto, dados, texto_processado)
+        simulaMemoria = {}  # Simula a memória RAM para armazenar inteiros
+
+        processar_segmento_texto(segmento_texto, dados, registradores, simulaMemoria)
+
 
 def atualizar_interface(linha, registradores, output):
     """Atualiza a interface gráfica com os registradores e saída"""
