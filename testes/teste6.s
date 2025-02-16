@@ -21,3 +21,8 @@
 	li $v0, 1
 	move $a0, $t1
 	syscall
+
+
+#Verificando se 8 < 10 usando imediato:
+#Resultado (1 = verdadeiro, 0 = falso): 
+#1

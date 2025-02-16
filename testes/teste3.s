@@ -29,3 +29,8 @@
 	li $v0, 1
 	move $a0, $t4
 	syscall
+
+
+#Multiplicação de 6 e 3, subtraindo 4:
+#Resultado: 
+#14

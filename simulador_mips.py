@@ -2,12 +2,8 @@ import tkinter as tk
 from tkinter import ttk, filedialog
 import re
 import time
-# Listas de opcodes conhecidos
-OPCODES_ARITMETICOS = {"add", "addi", "sub", "mul", "and", "or", "sll"}
-OPCODES_MEMORIA = {"lw", "sw", "lui"}
-OPCODES_CONDICIONAIS = {"slt", "slti"}
 
-OPCODES = set.union(OPCODES_ARITMETICOS, OPCODES_CONDICIONAIS, OPCODES_MEMORIA)
+
 
 # Lista de registradores MIPS
 REGISTRADORES = {
@@ -97,6 +93,7 @@ def simulate_mips(instrucao, registradores, dados, simulaMemoria):
         registradorSoma1 = instrucao[2].replace(",", "")
         registradorSoma2 = instrucao[3]
         registradores[registradorDestino] = int(registradores[registradorSoma1]) + int(registradores[registradorSoma2])
+
     elif instr == "addi": 
         print(instrucao)
         registradorDestino = instrucao[1].replace(",", "")
@@ -105,21 +102,25 @@ def simulate_mips(instrucao, registradores, dados, simulaMemoria):
         valorRegistrador = int(registradores[registradorSoma1])
         valorSoma2 = int(instrucao[3])
         registradores[registradorDestino] = valorRegistrador + valorSoma2
+
     elif instr == "sub":
         registradorDestino = instrucao[1].replace(",", "")
         registradorSub1 = instrucao[2].replace(",", "")
         registradorSub2 = instrucao[3]
         registradores[registradorDestino] = int(registradores[registradorSub1]) - int(registradores[registradorSub2])
+
     elif instr == "mul":
         registradorDestino = instrucao[1].replace(",", "")
         registradorMult1 = instrucao[2].replace(",", "")
         registradorMult2 = instrucao[3]
         registradores[registradorDestino] = int(registradores[registradorMult1]) * int(registradores[registradorMult2])
+
     elif instr == "sll":  # Shift Left Logical
         registradorDestino = instrucao[1].replace(",", "")
         registradorOrigem = instrucao[2].replace(",", "")
         shiftAmount = int(instrucao[3])
         registradores[registradorDestino] = registradores[registradorOrigem] << shiftAmount
+
     elif instr == "slt": 
         registradorDestino = instrucao[1].replace(",", "")
         registrador1 = instrucao[2].replace(",", "")
@@ -128,6 +129,7 @@ def simulate_mips(instrucao, registradores, dados, simulaMemoria):
             registradores[registradorDestino] = 1
         else: 
             registradores[registradorDestino] = 0
+
     elif instr == "slti": 
         registradorDestino = instrucao[1].replace(",", "")
         registrador1 = instrucao[2].replace(",", "")
@@ -137,6 +139,7 @@ def simulate_mips(instrucao, registradores, dados, simulaMemoria):
             registradores[registradorDestino] = 1
         else: 
             registradores[registradorDestino] = 0
+
     elif instr == "and":  # Operação lógica AND
         registradorDestino = instrucao[1].replace(",", "")
         registrador1 = instrucao[2].replace(",", "")
@@ -183,10 +186,11 @@ def simulate_mips(instrucao, registradores, dados, simulaMemoria):
             dados[instrucao[2]] = valor
     elif instr == "lui":  # Load Upper Immediate
         registradorDestino = instrucao[1].replace(",", "").strip()
-        
-        # Converte para inteiro corretamente, seja decimal ou hexadecimal
+        print(instrucao)
+        # Converte para inteiro corretam    ente, seja decimal ou hexadecimal
         valor_str = instrucao[2].strip()
         if valor_str.startswith("0x"):  
+            print("AQui")
             valorImediato = int(valor_str, 16) << 16  # Interpreta como hexadecimal e desloca
         else:
             valorImediato = int(valor_str) << 16  # Interpreta como decimal e desloca

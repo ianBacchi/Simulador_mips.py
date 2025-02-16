@@ -24,3 +24,9 @@
 	li $v0, 1
 	move $a0, $t0
 	syscall
+
+
+#output
+#Soma de 10 e 5:
+#Resultado: 
+#15

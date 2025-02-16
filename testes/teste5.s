@@ -24,3 +24,8 @@
 	li $v0, 1
 	move $a0, $t2
 	syscall
+
+
+#Verificando se 4 < 10:
+#Resultado (1 = verdadeiro, 0 = falso): 
+#1

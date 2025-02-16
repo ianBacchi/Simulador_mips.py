@@ -21,3 +21,8 @@
 	li $v0, 1
 	move $a0, $t1
 	syscall
+
+
+#Multiplicação de 7 por 2 usando shift left:
+#Resultado: 
+#14

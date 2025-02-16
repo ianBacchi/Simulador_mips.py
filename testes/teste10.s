@@ -24,3 +24,7 @@
 	li $v0, 1
 	move $a0, $t2
 	syscall
+
+#OR bit a bit entre 5 e 3:
+#Resultado: 
+#7

@@ -23,3 +23,8 @@
 	li $v0, 1
 	move $a0, $t1
 	syscall
+
+
+#Carregando e armazenando valor na memória:
+#Novo valor armazenado: 
+#43

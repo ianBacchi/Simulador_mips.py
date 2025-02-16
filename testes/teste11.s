@@ -10,3 +10,6 @@
 
 	li $v0, 10
 	syscall
+
+
+#Olá, Simulador MIPS!
