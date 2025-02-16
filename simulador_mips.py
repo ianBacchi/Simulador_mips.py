@@ -1,7 +1,7 @@
 import tkinter as tk
-from tkinter import filedialog
+from tkinter import ttk, filedialog
 import re
-
+import time
 # Listas de opcodes conhecidos
 OPCODES_ARITMETICOS = {"add", "addi", "sub", "mul", "and", "or", "sll"}
 OPCODES_MEMORIA = {"lw", "sw", "lui"}
@@ -18,6 +18,8 @@ REGISTRADORES = {
     "$t8": 24, "$t9": 25, "$k0": 26, "$k1": 27, "$gp": 28, "$sp": 29,
     "$fp": 30, "$ra": 31
 }
+
+
 
 def selecionar_arquivo():
     """Abre um seletor de arquivos e retorna o caminho do arquivo escolhido."""
@@ -96,19 +98,32 @@ def simulate_mips(instrucao, registradores, dados):
     elif instr == "addi": 
         registradorDestino = instrucao[1].replace(",", "")
         registradorSoma1 = instrucao[2].replace(",", "")
-        valorSoma2 = instrucao[3]
+        valorSoma2 = int(instrucao[3])
         registradores[registradorDestino] = int(registradores[registradorSoma1] + valorSoma2)
-
+    elif instr == "sub":
+        registradorDestino = instrucao[1].replace(",", "")
+        registradorSub1 = instrucao[2].replace(",", "")
+        registradorSub2 = instrucao[3]
+        registradores[registradorDestino] = int(registradores[registradorSub1]) - int(registradores[registradorSub2])
+    elif instr == "mult":
+        registradorDestino = instrucao[1].replace(",", "")
+        registradorMult1 = instrucao[2].replace(",", "")
+        registradorMult2 = instrucao[3]
+        registradores[registradorDestino] = int(registradores[registradorMult1]) * int(registradores[registradorMult2])
+    elif instr == "sll":  # Shift Left Logical
+        registradorDestino = instrucao[1].replace(",", "")
+        registradorOrigem = instrucao[2].replace(",", "")
+        shiftAmount = int(instrucao[3])  # Número de bits a deslocar
+        registradores[registradorDestino] = registradores[registradorOrigem] << shiftAmount
     elif instr == "syscall":  # Simula chamadas do sistema
         if registradores["$v0"] == 1:  # Imprimir inteiro
             numero = registradores["$a0"]
-            print(numero)
+            output = numero
         elif registradores["$v0"] == 4:  # Imprimir string 
             palavra = registradores["$a0"]
-            print(memoria[palavra])
-        elif registradores["$v0"] == 5: # Le inteiro
-            registradores["$v0"] = input("") 
-
+            output = memoria[palavra]
+        #elif registradores["$v0"] == 5: # Le inteiro
+            #input()
         elif registradores["$v0"] == 10:
             sair()  # Exemplo fixo
 
@@ -146,11 +161,13 @@ def processar_segmento_texto(segmento_texto, dados):
     
     for linha in segmento_texto:
         print("LINHA "+ linha)
-        print(simulate_mips(linha, registradores, dados))
-        input(' ')
+        output = simulate_mips(linha, registradores, dados)
+        atualizar_interface(linha, registradores, output)
+        input(" ")
         texto_processado.append(linha)
     
     return texto_processado
+
 
 def exibir_resultados(segmento_dados, segmento_texto, dados, texto_processado):
     """Exibe os resultados no console."""
@@ -183,11 +200,61 @@ def iniciar_processamento():
         texto_processado = processar_segmento_texto(segmento_texto, dados)
         exibir_resultados(segmento_dados, segmento_texto, dados, texto_processado)
 
-# Interface gráfica
-janela = tk.Tk()
-janela.title("Leitor de Arquivo Assembly")
+def atualizar_interface(linha, registradores, output):
+    """Atualiza a interface gráfica com os registradores e saída"""
+    
+    # Atualiza o terminal com a instrução atual
+    terminal_text.delete("1.0", tk.END)
+    terminal_text.insert(tk.END, linha)
 
-botao_abrir = tk.Button(janela, text="Abrir Arquivo", command=iniciar_processamento)
-botao_abrir.pack(pady=10)
+    # Limpa e insere os valores atualizados dos registradores na tabela
+    tree.delete(*tree.get_children())
+    for reg, val in registradores.items():
+        tree.insert("", "end", values=(reg, val))
+    
+    # Atualiza a saída do programa
+    if output:
+        #output_text.delete("1.0", tk.END)
+        output_text.insert(tk.END, str(output) + "\n")
+        output_text.see(tk.END)  # Rola automaticamente para a última linha
+
+# Criando a janela principal
+janela = tk.Tk()
+janela.title("Simulador MIPS")
+
+# Configurar o grid
+janela.columnconfigure(0, weight=1)
+janela.columnconfigure(1, weight=2)
+janela.columnconfigure(2, weight=2)
+
+# Criando a Tabela de Registradores (Coluna 1)
+tree = ttk.Treeview(janela, columns=("Registrador", "Valor"), show="headings", height=20)
+tree.heading("Registrador", text="Registrador")
+tree.heading("Valor", text="Valor")
+tree.grid(row=0, column=0, rowspan=2, sticky="nsew", padx=5, pady=5)
+
+# Criando um Frame para a linha lida (Coluna 2)
+frame_linha = tk.Frame(janela)
+frame_linha.grid(row=0, column=1, sticky="nsew", padx=5, pady=(5, 2))  # Reduz espaço inferior
+
+linha_label = tk.Label(frame_linha, text="Linha Lida:", font=("Arial", 10, "bold"))
+linha_label.pack(anchor="w")
+
+terminal_text = tk.Text(janela, height=5, width=40)
+terminal_text.grid(row=1, column=1, sticky="nsew", padx=5, pady=(2, 5))  # Reduz espaço superior
+
+# Criando um Frame para o output (Coluna 3)
+frame_output = tk.Frame(janela)
+frame_output.grid(row=0, column=2, sticky="nsew", padx=5, pady=(5, 2))
+
+output_label = tk.Label(frame_output, text="Output:", font=("Arial", 10, "bold"))
+output_label.pack(anchor="w")
+
+output_text = tk.Text(janela, height=5, width=40)
+output_text.grid(row=1, column=2, sticky="nsew", padx=5, pady=(2, 5))
+
+# Botão para abrir arquivo
+botao_abrir = tk.Button(janela, text="Abrir Arquivo", command=lambda: iniciar_processamento())
+botao_abrir.grid(row=2, column=1, columnspan=2, pady=10)
 
 janela.mainloop()
