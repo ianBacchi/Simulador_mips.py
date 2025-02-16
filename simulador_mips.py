@@ -173,20 +173,15 @@ def processar_segmento_dados(segmento_dados):
     return dados
 
 
-def processar_segmento_texto(segmento_texto, dados):
-    """Processa o segmento .text e analisa os tokens."""
-    texto_processado = []
-    registradores = {reg: 0 for reg in REGISTRADORES.keys()}  # Inicializa registradores com 0
-    
-    for linha in segmento_texto:
-        print("LINHA "+ linha)
+def processar_segmento_texto(segmento_texto, dados, registradores, index=0):
+    """Processa uma linha por vez sem travar a interface."""
+    if index < len(segmento_texto):  # Verifica se ainda há linhas para processar
+        linha = segmento_texto[index]
         output = simulate_mips(linha, registradores, dados)
         atualizar_interface(linha, registradores, output)
-        input(" ")
-        texto_processado.append(linha)
-    
-    return texto_processado
 
+        # Chama a próxima linha depois de 2 segundos
+        janela.after(2000, lambda: processar_segmento_texto(segmento_texto, dados, registradores, index + 1))
 
 def exibir_resultados(segmento_dados, segmento_texto, dados, texto_processado):
     """Exibe os resultados no console."""
@@ -214,9 +209,9 @@ def iniciar_processamento():
         print("Arquivo selecionado:", caminho_arquivo)
         segmento_dados, segmento_texto = ler_arquivo(caminho_arquivo)
         dados = processar_segmento_dados(segmento_dados)
-        print(dados)
-        input()
-        texto_processado = processar_segmento_texto(segmento_texto, dados)
+        #print(dados)
+        registradores = {reg: 0 for reg in REGISTRADORES.keys()}
+        texto_processado = processar_segmento_texto(segmento_texto, dados, registradores)
         exibir_resultados(segmento_dados, segmento_texto, dados, texto_processado)
 
 def atualizar_interface(linha, registradores, output):
