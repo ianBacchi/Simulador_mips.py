@@ -106,7 +106,7 @@ def simulate_mips(instrucao, registradores, dados):
         registradorSub1 = instrucao[2].replace(",", "")
         registradorSub2 = instrucao[3]
         registradores[registradorDestino] = int(registradores[registradorSub1]) - int(registradores[registradorSub2])
-    elif instr == "mult":
+    elif instr == "mul":
         registradorDestino = instrucao[1].replace(",", "")
         registradorMult1 = instrucao[2].replace(",", "")
         registradorMult2 = instrucao[3]
