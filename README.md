@@ -7,7 +7,7 @@ Simulador de processador MIPS de 32 bits que permite a execução de programas e
    Abra o arquivo `Simulador_mips.py` e execute-o em seu ambiente Python.
 
 2. **Abra o Arquivo de Teste:**
-   Após executar o simulador, você será solicitado a abrir um arquivo com código Assembly no padrão especificado (exemplo no formato `.data` e `.text`).
+   Após executar o simulador, você será solicitado a abrir um arquivo com código Assembly tendo algumas opções na pasta "testes" ou qualquer outro no padrão dos arquivos da pasta.
 
 3. **Execução do Código:**
    O programa será executado **passo a passo**, mostrando as linhas do código lidas e o output gerado a cada instrução.
