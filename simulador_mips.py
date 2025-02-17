@@ -1,4 +1,5 @@
-import tkinter as tk
+#Henrique Cois  e Ian Bacchi
+i-mport tkinter as tk
 from tkinter import ttk, filedialog
 import re
 import time
