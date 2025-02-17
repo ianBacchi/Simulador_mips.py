@@ -1,5 +1,5 @@
 #Henrique Cois  e Ian Bacchi
-i-mport tkinter as tk
+import tkinter as tk
 from tkinter import ttk, filedialog
 import re
 import time
